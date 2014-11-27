@@ -52,13 +52,24 @@
 </head>
 
 <body>
+
+<?php if($this->Session->read("Auth.User.role") == 'admin')
+      {
+        include("headeradmin.ctp");
+      }
+      else
+      {
+        include("header.ctp");
+      }
+?>
+
 <div id="contenedor">
 
-    <?php include("header.ctp");?>
     <?php echo '<br>'.$this->Html->link("Vaciar carrito",array('controller'=>'products','action'=>'vaciar')).'<br>' ;?>
     <div id="simple">
         <?php $number=0;
         $total=0;
+        $totalConDesc=0;
         foreach ($cart as $key => $product ):
             $cantidad=$this->Session->read('CartQty.'.$number);
             $number++;
@@ -82,13 +93,22 @@
                         <?php
                         $subtotal=$cantidad*$product['Product']['price'];
                         $total=$total+$subtotal;
-                        echo 'Cantidad: '.$cantidad.'<br>Precio subtotal: '.$subtotal.'$'; ?>
+                        echo 'Cantidad: '.$cantidad.'<br>Precio subtotal: '.$subtotal.'$';
+                        if($product['Product']['discount']!=0){
+                            $subtotal=$subtotal*(100-$product['Product']['discount'])/100;
+                            echo '<br>Descuento: '.$product['Product']['discount'].'%<br>Precio con Descuento: '.$subtotal.'$<br>';
+                        }
+                        $totalConDesc = $totalConDesc+$subtotal;  ?>
+                        <br>
                  </div>
             </tr>
         <?php endforeach; ?>
         <?php unset($product); ?>
         <?php
-            echo '<b>Precio total de la compra: </b>'.$total.'$<br><br>';
+            echo '<p><div align="right"><b>Precio total de la compra: </b>'.$total.'$<br><b>Precio total con descuentos: </b>'.$totalConDesc.'$<br><br>';
+            echo $this->Form->create("Checks",array('action' => 'check'));
+            echo $this->Form->end("Realizar compra");
+            echo '</div></p>';
         ?>
     </div>
 

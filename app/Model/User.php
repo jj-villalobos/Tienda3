@@ -5,7 +5,16 @@ App::uses('BlowfishPasswordHasher', 'Controller/Component/Auth');
 class User extends AppModel
 {
 	 public $hasOne = 'Wishlist'; //un ususario tiene una wishlist que le pertenece
-	 
+	 public $hasAndBelongsToMany = array(
+        'Debitcard' =>
+            array(
+                'className' => 'Debitcard',
+                'joinTable' => 'card_users',
+                'foreignKey' => 'user_id',
+                'associationForeignKey' => 'card_id',
+                'unique' => true
+            )
+     );
     public $validate = array
     (
         'username' => array

@@ -49,9 +49,17 @@
 
 <body>
 
-<div id="container">
+<?php if($this->Session->read("Auth.User.role") == 'admin')
+      {
+        include("headeradmin.ctp");
+      }
+      else
+      {
+        include("header.ctp");
+      }
+?>
 
-    <?php include("header.ctp");?>
+<div id="container">
 
     <div id="product">
 	
@@ -66,7 +74,7 @@
             }
 
 			?>
-			<?php echo $this->Form->postLink('Añadir al carrito',array('action' => 'agregarCarrito',$product['Product']['id'],$product['Product']['price']));?>
+			<?php echo $this->Form->postLink('Añadir al carrito',array('action' => 'agregarCarrito',$product['Product']['id'],$product['Product']['price']*(100-$product['Product']['discount'])/100));?>
         </div>
 
         <h3><?php echo "Nombre del videojuego: ". $product['Product']['name']; ?></h3>
@@ -74,8 +82,22 @@
 		<p><b>Plataforma: </b><?php echo $platform['Platform']['name']; ?></p>
 
         <p><b>Año de lanzamiento: </b><?php echo $product['Product']['release_year']; ?></p>
+		
+		<p><b>Requerimientos: </b><?php echo $product['Product']['requirement']; ?></p>
 
         <p><b>Precio: $ </b><?php echo $product['Product']['price']; ?></p>
+
+        <?php
+             if($product['Product']['discount']!=0){
+                echo '<p><b>Descuento: </b>'.$product['Product']['discount'].'%</p>';
+             }
+        ?>
+		
+		 <?php
+             if($product['Product']['tax']!=0){
+                echo '<p><b>Impuesto: </b>'.$product['Product']['tax'].'%</p>';
+             }
+        ?>
 
         <p><b>Descripción: </b><?php echo $product['Product']['description']; ?></p>
 

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Busqueda</title>
+    <title>Catálogo de la tienda</title>
     <style>
 
         #container
@@ -15,6 +15,7 @@
         #product
         {
             width:70%;
+            height:1000px;
             display:inline;
             float: left;
             margin:5px;
@@ -23,7 +24,7 @@
             padding:10px;
         }
 
-        #categories
+        .categories
         {
             width:25%;
             display:inline;
@@ -64,15 +65,34 @@
         {
             padding-bottom:10px
         }
+
+        table tr td
+        {
+            padding: 6px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom:0px solid #ddd;
+        }
+
     </style>
 </head>
 
 <body>
-<?php include("header.ctp");?>
+
+<?php if($this->Session->read("Auth.User.role") == 'admin')
+      {
+        include("headeradmin.ctp");
+      }
+      else
+      {
+        include("header.ctp");
+      }
+?>
 
 <div id="container">
 
     <div id="product">
+		<h1><?php echo $this->Html->link('Solo en stock', array('controller' => 'products', 'action' => 'filterStock', 'full_base' => true)) ?></h1>
         <?php foreach ($results as $product): ?>
         <div id="simple">
             <tr>
@@ -103,8 +123,16 @@
         <?php unset($product); ?>
     </div>
 
-    <div id="categories">
-        <p>Categorías</p>
+    <div class="categories">
+    <table id='categorytree' style="width:100%">
+        <h1>Categorías</h1>
+        <?php foreach ($categorylist as $key => $value): ?>
+            <p>
+                <a><?php echo $this->Html->link($value, array('controller' => 'products', 'action' => 'search', $value)); ?></a>
+            </p>
+            <?php endforeach; ?>
+            <?php unset($categorylist); ?>
+        </table>
     </div>
 
 </div>

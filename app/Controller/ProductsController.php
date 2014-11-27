@@ -11,32 +11,31 @@ class ProductsController extends AppController
 	
 	public function index()
     {
-        $this->set('products', $this->Product->find('all'));
+		$this->set('products', $this->Product->find("all", array('conditions' => array("Product.enabled = 1"))));
 
 		if($this->Session->read("Auth.User.role") == 'admin'){
             $this->set('role','admin');
+			$this->set('products', $this->Product->find("all"));
         }
         else{
             $this->set('role','cust');
+			$this->set('products', $this->Product->find("all", array('conditions' => array("Product.enabled = 1"))));
         }
+		
+		$this->set('categorylist',$this->Category->generateTreeList(
+            null,
+            null,
+            null,
+            ' • '
+        ));
     }
 	
-	/*
-    public function index()
+	public function beforeFilter()
     {
-        $this->set('products', $this->Product->find('all'));
-		  if($this->Session->read("Auth.User.role") == 'admin'){
-		if($this->Session->read("Auth.User.role") == 'admin'){
-		887d7e2d78705918fb812c7de4107c0c06caaec3
-
-		if($this->Session->read("Auth.User.role") == 'admin'){
-		887d7e2d78705918fb812c7de4107c0c06caaec3
-            $this->set('role','admin');
-        }
-        else{
-            $this->set('role','cust');
-        }
-    }*/
+        parent::beforeFilter();
+        // Permite a usuarios no registrados buscar.
+        $this->Auth->allow('search', 'filterStock');
+    }
 
     public function view($id = null)
     {
@@ -65,30 +64,34 @@ class ProductsController extends AppController
         }
 
     }
+	
+	// added in sprint 3
+	public function enableOrDisable($id = null) {
+		if($this->Session->read("Auth.User.role") == 'admin') {
+			if (!$id) {
+				throw new NotFoundException(__('Invalid product'));
+			}
 
-	/*public function edit($id = null) {
-        if (!$id) {
-            throw new NotFoundException(__('Invalid product'));
-        }
+			$product = $this->Product->findById($id);
+			if (!$product) {
+				throw new NotFoundException(__('Invalid product'));
+			}
 
-        $product = $this->Product->findById($id);
-        if (!$product) {
-            throw new NotFoundException(__('Invalid product'));
+			$this->Product->read(null, $id);
+			if( $product['Product']['enabled'] == FALSE){
+				$this->Product->set('enabled', 1);
+			}
+			if( $product['Product']['enabled'] == TRUE){
+				$this->Product->set('enabled', 0);
+			}
+			$this->Product->save();
+			return $this->redirect(array('action' => 'index'));
+				
+		}else{
+            $this->Session->setFlash(__('Acceso no permitido.'));
+            return $this->redirect(array('action' => 'index'));
         }
-
-        if ($this->request->is(array('product', 'put'))) {
-            $this->Product->id = $id;
-            if ($this->Product->save($this->request->data)) {
-                $this->Session->setFlash(__('Your product has been updated.'));
-                return $this->redirect(array('action' => 'index'));
-            }
-            $this->Session->setFlash(__('Unable to update your product.'));
-        }
-
-        if (!$this->request->data) {
-            $this->request->data = $product;
-        }
-    }*/
+    }
 	
 	public function edit($id = null) {
 		if($this->Session->read("Auth.User.role") == 'admin') {
@@ -102,6 +105,8 @@ class ProductsController extends AppController
 			if (!$product) {
 				throw new NotFoundException(__('Invalid product'));
 			}
+			
+			$this->set('cant', $this->Product->Stock->find('first', array('conditions' => array('Stock.product_id' == $product['Product']['id']))));
 
 			if ($this->request->is(array('product', 'put'))) {
 				$this->Product->id = $id;
@@ -134,38 +139,6 @@ class ProductsController extends AppController
         }
     }
 	
-	/* public function add() {
-        if ($this->request->is('post')) { 
-            $this->Product->create();
-            if ($this->Product->save($this->request->data)) {
-                $this->Session->setFlash(__('Your product has been saved.'));
-                return $this->redirect(array('action' => 'index'));
-            }
-            $this->Session->setFlash(__('Unable to add your product.'));
-        }
-    } */
-	
-	/*public function add() {
-        if ($this->request->is('post')) { 
-            $this->Product->create();
-            if ($this->Product->save($this->request->data)) {
-				if($this->request->data['Product']['archivo']['error'] == 0 &&  $this->request->data['Product']['archivo']['size'] > 0){
-				  // Informacion del tipo de archivo subido $this->data['Product']['archivo']['type']
-				  //$destino = WWW_ROOT.'uploads'.DS;
-				  $destino = WWW_ROOT.'img'.DS;
-				  move_uploaded_file($this->request->data['Product']['archivo']['tmp_name'], $destino.$this->request->data['Product']['archivo']['name']);
-				  $id = $this->request->data['Product']['id'];
-				  $this->Product->read(null, $id);
-				  $this->Product->set('image', $this->request->data['Product']['archivo']['name']);
-				  $this->Product->save();
-				}
-                $this->Session->setFlash(__('Your product has been saved.'));
-                return $this->redirect(array('action' => 'index'));
-            }
-            $this->Session->setFlash(__('Unable to add your product.'));
-        }
-    }*/
-	
 	//necesito recibir la plataforma, la categoría y la cantidad.
     //meto una entrada en stocks con la cantidad
     //recibo un array con la lista de categorías a las q pertenece el producto y meto por cada entrada en el array, una nueva entrada en categories_products
@@ -178,7 +151,7 @@ class ProductsController extends AppController
 			if ($this->request->is('post')) { 
 				$this->Product->create();
 				if ($this->Product->save($this->request->data)) {
-					//$this->Product->Stock->save(['product_id'=>$this->Product->id, 'amount'=>$this->request->data['Product']['amount']]);
+					$this->Product->Stock->save(['product_id'=>$this->Product->id, 'amount'=>$this->request->data['Product']['amount']]);
 					if($this->request->data['Product']['archivo']['error'] == 0 &&  $this->request->data['Product']['archivo']['size'] > 0){
 					  // Informacion del tipo de archivo subido $this->data['Product']['archivo']['type']
 					  //$destino = WWW_ROOT.'uploads'.DS;
@@ -222,6 +195,15 @@ class ProductsController extends AppController
         }
     }
 	
+	function filterStock() {
+       $this->set('results', $this->Product->find("all", array('conditions' => array("Product.outofstock != 1"))));
+	   $this->set('categorylist',$this->Category->generateTreeList(
+            null,
+            null,
+            null,
+            ' • '
+        ));
+    }
 	
     function search() {
         if (isset($this->request->data['Products']['q'])) {
@@ -241,6 +223,13 @@ class ProductsController extends AppController
 
             )
         )));
+		
+		$this->set('categorylist',$this->Category->generateTreeList(
+            null,
+            null,
+            null,
+            ' • '
+        ));
     }
 
     public function agregarCarrito($id,$price){
@@ -315,5 +304,4 @@ class ProductsController extends AppController
     }
 
 }
-
 ?>

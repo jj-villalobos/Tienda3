@@ -35,7 +35,15 @@
 
 <body>
 
-<?php include("header.ctp");?>
+<?php if($this->Session->read("Auth.User.role") == 'admin')
+      {
+        include("headeradmin.ctp");
+      }
+      else
+      {
+        include("header.ctp");
+      }
+?>
 
 <div id="container">
     <div class="productsform">
@@ -63,13 +71,17 @@
         echo $this->Form->input('description', array('rows' => '3', 'label'=>'Descripción del videojuego:'));
         echo "<br><br><br><br>";
         //amount es para insertar en stock
-        echo $this->Form->input('amount', array('label'=>'Cantidad de producto (unidades):', 'type' => 'number', 'default' => '0'));
+        echo $this->Form->input('amount', array('label'=>'Cantidad de producto (unidades):', 'type' => 'number', 'default'=>$cant['Stock']['amount']));
         echo "<br><br>";
         echo $this->Form->input('presentation', array('type' => 'select', 'options' => array('Físico', 'Digital'), 'label' => 'Formato de entrega:', 'empty' => 'no seleccionado'));
         echo "<br><br>";
         echo $this->Form->input('requirement', array('rows' => '3', 'label'=>'Requerimientos específicos:'))."<br><br>";
         echo "<br><br>";
         echo $this->Form->input('rated', array('type' => 'select', 'label'=>'Público:', 'options' => array('early childhood', 'everyone', 'everyone 10+','teen','mature','adults only','rating pending','kids to adults'), 'empty' => 'no seleccionado'));
+        echo "<br><br>";
+        echo $this->Form->input('discount',array('label'=>'Descuento de producto en %:','type'=>'number','default'=>$cant['Stock']['amount']));
+        echo "<br><br>";
+		echo $this->Form->input('tax',array('label'=>'Impuesto de producto en %:','type'=>'number','default'=>$cant['Stock']['amount']));
         echo "<br><br>";
         echo $this->Form->input('archivo', array('type' => 'file', 'label'=>'Seleccione un archivo de imagen:'));
         echo "<br><br>";
